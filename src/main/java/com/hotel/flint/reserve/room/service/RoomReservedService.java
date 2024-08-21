@@ -5,23 +5,20 @@ import com.hotel.flint.common.enumdir.Department;
 import com.hotel.flint.common.enumdir.Option;
 import com.hotel.flint.common.enumdir.RoomView;
 import com.hotel.flint.common.enumdir.Season;
-import com.hotel.flint.reserve.dining.domain.DiningReservation;
 import com.hotel.flint.reserve.room.controller.RoomSSEController;
-import com.hotel.flint.reserve.room.domain.*;
-import com.hotel.flint.reserve.room.dto.PossibleRoomDto;
-import com.hotel.flint.reserve.room.dto.RoomReservedDetailDto;
-import com.hotel.flint.reserve.room.dto.RoomReservedDto;
-import com.hotel.flint.reserve.room.dto.RoomReservedListDto;
-import com.hotel.flint.reserve.room.repository.*;
+import com.hotel.flint.reserve.room.domain.ReservedRoom;
+import com.hotel.flint.reserve.room.domain.RoomReservation;
+import com.hotel.flint.reserve.room.dto.*;
+import com.hotel.flint.reserve.room.repository.CheckReservedDateRepository;
+import com.hotel.flint.reserve.room.repository.RoomReservationRepository;
 import com.hotel.flint.room.domain.RoomDetails;
 import com.hotel.flint.room.domain.RoomInfo;
 import com.hotel.flint.room.domain.RoomPrice;
 import com.hotel.flint.room.repository.RoomDetailsRepository;
 import com.hotel.flint.room.repository.RoomInfoRepository;
 import com.hotel.flint.room.repository.RoomPriceRepository;
-import com.hotel.flint.user.employee.dto.InfoRoomDetResDto;
-import com.hotel.flint.user.employee.dto.memberDiningResDto;
 import com.hotel.flint.user.employee.domain.Employee;
+import com.hotel.flint.user.employee.dto.InfoRoomDetResDto;
 import com.hotel.flint.user.employee.repository.EmployeeRepository;
 import com.hotel.flint.user.member.domain.Member;
 import com.hotel.flint.user.member.repository.MemberRepository;
@@ -34,9 +31,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.math.BigDecimal;
-import java.security.Security;
-import java.sql.Array;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,7 +80,7 @@ public class RoomReservedService {
      * 룸 예약 진행
      */
     @Transactional
-    public long roomReservation(RoomReservedDto dto) {
+    public RoomReservedResDto roomReservation(RoomReservedDto dto) {
 
         String memberEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -117,9 +111,9 @@ public class RoomReservedService {
         List<Employee> roomEmployeeList = employeeRepository.findByDepartment(Department.Room);
         roomSSEController.publishMessage(savedRoomReservation.detailFromEntity(), roomEmployeeList);
         // 날짜 가져가서 계산
-        long totalPrice = calculatePrice(dto);
+        RoomReservedResDto roomReservedResDto = new RoomReservedResDto(savedRoomReservation.getId(), calculatePrice(dto));
 
-        return totalPrice;
+        return roomReservedResDto;
 
     }
 
