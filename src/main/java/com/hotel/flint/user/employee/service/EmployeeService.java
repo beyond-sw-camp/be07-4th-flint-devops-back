@@ -27,7 +27,6 @@ import javax.transaction.Transactional;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -141,6 +140,13 @@ public class EmployeeService {
 
     public String findEmailToPhoneNum(String phoneNumber){
         Employee employee = employeeRepository.findByPhoneNumberAndDelYN(phoneNumber, Option.N).orElseThrow(
+                ()-> new EntityNotFoundException("해당 번호로 가입한 계정이 없습니다. 관리자에게 문의해주세요."));
+        return employee.getEmail();
+    }
+
+    public String findEmailToPhoneNum2(String firstName, String lastName, String phoneNumber){
+        Employee employee = employeeRepository.findByPhoneNumberAndFirstNameAndLastNameAndDelYN(
+                phoneNumber, firstName, lastName, Option.N).orElseThrow(
                 ()-> new EntityNotFoundException("해당 번호로 가입한 계정이 없습니다. 관리자에게 문의해주세요."));
         return employee.getEmail();
     }

@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -86,7 +85,7 @@ public class EmployeeController {
 //    직원 비밀번호 찾기. 회원과 같은 로직
     public ResponseEntity<?> findPassword(@RequestBody FindPasswordRequest request) {
         try {
-            mailService.sendTempPassword(request.getEmail());
+            mailService.sendTempPassword(request);
             CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "임시 비밀번호를 이메일로 발송했습니다.", null);
             return new ResponseEntity<>(commonResDto, HttpStatus.OK);
         } catch (EntityNotFoundException e) {

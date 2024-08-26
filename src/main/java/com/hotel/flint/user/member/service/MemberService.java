@@ -49,6 +49,13 @@ public class MemberService {
                 () -> new EntityNotFoundException("해당 번호로 가입한 아이디가 없습니다."));
         return member.getEmail();
     }
+
+    public String findEmail2(String phoneNumber, String firstName, String lastName) {
+        Member member = memberRepository.findByPhoneNumberAndFirstNameAndLastNameAndDelYN(
+                phoneNumber, firstName, lastName,Option.N).orElseThrow(
+                () -> new EntityNotFoundException("해당 번호로 가입한 아이디가 없습니다."));
+        return member.getEmail();
+    }
 /*
 * 멤버 비밀번호 수정 로직
 * */

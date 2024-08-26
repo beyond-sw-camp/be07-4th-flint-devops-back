@@ -34,7 +34,4 @@ public class RoomPrice {
     private RoomView roomView;
 
     private Double additionalPercentage;
-
-    @Enumerated(value = EnumType.STRING)
-    private Option isWeekend;
 }
