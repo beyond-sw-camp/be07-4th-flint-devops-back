@@ -37,25 +37,25 @@ public class MemberController {
         this.jwtAuthFilter = jwtAuthFilter;
     }
 
+//    @PostMapping("/findemail")
+////    회원이 아이디 찾기, JSON 데이터 {phoneNumber:""} 를 통해 찾아온 값으로 이메일 return 해줌
+//    public ResponseEntity<?> findEmail(@RequestBody Map<String, String> request) {
+//        try {
+//            String memberEmail = memberService.findEmail(request.get("phoneNumber"));
+//            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회에 성공하였습니다.",
+//                    "회원님의 이메일은 " + memberEmail + "입니다");
+//            return new ResponseEntity<>(commonResDto, HttpStatus.OK);
+//        } catch (EntityNotFoundException e) {
+//            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+//            return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
+//        }
+//    }
+
     @PostMapping("/findemail")
 //    회원이 아이디 찾기, JSON 데이터 {phoneNumber:""} 를 통해 찾아온 값으로 이메일 return 해줌
-    public ResponseEntity<?> findEmail(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> findEmail2(@RequestBody FindEmailRequest request) {
         try {
-            String memberEmail = memberService.findEmail(request.get("phoneNumber"));
-            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회에 성공하였습니다.",
-                    "회원님의 이메일은 " + memberEmail + "입니다");
-            return new ResponseEntity<>(commonResDto, HttpStatus.OK);
-        } catch (EntityNotFoundException e) {
-            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-            return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
-        }
-    }
-
-    @PostMapping("/findemail2")
-//    회원이 아이디 찾기, JSON 데이터 {phoneNumber:""} 를 통해 찾아온 값으로 이메일 return 해줌
-    public ResponseEntity<?> findEmail2(@RequestBody Map<String, String> request) {
-        try {
-            String memberEmail = memberService.findEmail(request.get("phoneNumber"));
+            String memberEmail = memberService.findEmail(request);
             CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회에 성공하였습니다.",
                     "회원님의 이메일은 " + memberEmail + "입니다");
             return new ResponseEntity<>(commonResDto, HttpStatus.OK);

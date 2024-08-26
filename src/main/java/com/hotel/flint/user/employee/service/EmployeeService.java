@@ -1,5 +1,6 @@
 package com.hotel.flint.user.employee.service;
 
+import com.hotel.flint.common.dto.FindEmailRequest;
 import com.hotel.flint.common.dto.UserLoginDto;
 import com.hotel.flint.common.enumdir.Department;
 import com.hotel.flint.common.enumdir.Option;
@@ -138,15 +139,15 @@ public class EmployeeService {
         return employee;
     }
 
-    public String findEmailToPhoneNum(String phoneNumber){
-        Employee employee = employeeRepository.findByPhoneNumberAndDelYN(phoneNumber, Option.N).orElseThrow(
-                ()-> new EntityNotFoundException("해당 번호로 가입한 계정이 없습니다. 관리자에게 문의해주세요."));
-        return employee.getEmail();
-    }
+//    public String findEmailToPhoneNum(String phoneNumber){
+//        Employee employee = employeeRepository.findByPhoneNumberAndDelYN(phoneNumber, Option.N).orElseThrow(
+//                ()-> new EntityNotFoundException("해당 번호로 가입한 계정이 없습니다. 관리자에게 문의해주세요."));
+//        return employee.getEmail();
+//    }
 
-    public String findEmailToPhoneNum2(String firstName, String lastName, String phoneNumber){
+    public String findEmailToPhoneNum(FindEmailRequest request){
         Employee employee = employeeRepository.findByPhoneNumberAndFirstNameAndLastNameAndDelYN(
-                phoneNumber, firstName, lastName, Option.N).orElseThrow(
+                request.getPhoneNumber(), request.getFirstName(), request.getLastName(),Option.N).orElseThrow(
                 ()-> new EntityNotFoundException("해당 번호로 가입한 계정이 없습니다. 관리자에게 문의해주세요."));
         return employee.getEmail();
     }
