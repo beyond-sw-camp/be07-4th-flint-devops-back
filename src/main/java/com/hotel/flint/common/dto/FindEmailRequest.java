@@ -3,8 +3,8 @@ package com.hotel.flint.common.dto;
 import lombok.Data;
 
 @Data
-public class FindPasswordRequest {
+public class FindEmailRequest {
     private String firstName;
     private String lastName;
-    private String email;
+    private String phoneNumber;
 }

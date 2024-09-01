@@ -15,6 +15,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     Optional<Employee> findByIdAndDelYN(Long id, Option delYN);
     Optional<Employee> findByEmailAndDelYN(String email, Option delYN);
     Optional<Employee> findByPhoneNumberAndDelYN(String phoneNumber, Option delYN);
+    Optional<Employee> findByPhoneNumberAndFirstNameAndLastNameAndDelYN(String phoneNumber, String FirstName, String LastName, Option delYN);
+    Optional<Employee> findByEmailAndFirstNameAndLastNameAndDelYN(String email, String FirstName, String LastName, Option delYN);
+
     List<Employee> findAll(Specification<Employee> specification);
 
     List<Employee> findByDepartment(Department department);

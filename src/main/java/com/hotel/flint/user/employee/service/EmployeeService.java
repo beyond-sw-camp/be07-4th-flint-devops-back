@@ -1,5 +1,6 @@
 package com.hotel.flint.user.employee.service;
 
+import com.hotel.flint.common.dto.FindEmailRequest;
 import com.hotel.flint.common.dto.UserLoginDto;
 import com.hotel.flint.common.enumdir.Department;
 import com.hotel.flint.common.enumdir.Option;
@@ -27,7 +28,6 @@ import javax.transaction.Transactional;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -139,8 +139,15 @@ public class EmployeeService {
         return employee;
     }
 
-    public String findEmailToPhoneNum(String phoneNumber){
-        Employee employee = employeeRepository.findByPhoneNumberAndDelYN(phoneNumber, Option.N).orElseThrow(
+//    public String findEmailToPhoneNum(String phoneNumber){
+//        Employee employee = employeeRepository.findByPhoneNumberAndDelYN(phoneNumber, Option.N).orElseThrow(
+//                ()-> new EntityNotFoundException("해당 번호로 가입한 계정이 없습니다. 관리자에게 문의해주세요."));
+//        return employee.getEmail();
+//    }
+
+    public String findEmailToPhoneNum(FindEmailRequest request){
+        Employee employee = employeeRepository.findByPhoneNumberAndFirstNameAndLastNameAndDelYN(
+                request.getPhoneNumber(), request.getFirstName(), request.getLastName(),Option.N).orElseThrow(
                 ()-> new EntityNotFoundException("해당 번호로 가입한 계정이 없습니다. 관리자에게 문의해주세요."));
         return employee.getEmail();
     }

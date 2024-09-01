@@ -1,5 +1,6 @@
 package com.hotel.flint.common.service;
 
+import com.hotel.flint.common.dto.FindPasswordRequest;
 import com.hotel.flint.common.enumdir.Option;
 import com.hotel.flint.user.employee.domain.Employee;
 import com.hotel.flint.user.employee.repository.EmployeeRepository;
@@ -28,10 +29,12 @@ public class UserService {
     }
 
 //    직원, 회원 공통된 부분이므로 여기서 공통화 작업
-    public void updatePassword(String email, String newPassword) {
+    public void updatePassword(FindPasswordRequest request, String newPassword) {
 //        이메일 조회 결과로 직원인지 회원인지 판단함.
-        Optional<Member> memberOpt = memberRepository.findByEmailAndDelYN(email, Option.N);
-        Optional<Employee> employeeOpt = employeeRepository.findByEmailAndDelYN(email, Option.N);
+        Optional<Member> memberOpt = memberRepository.findByEmailAndFirstNameAndLastNameAndDelYN
+                (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N);
+        Optional<Employee> employeeOpt = employeeRepository.findByEmailAndFirstNameAndLastNameAndDelYN
+                (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N);
 
         if (memberOpt.isPresent()) {
             Member member = memberOpt.get();
