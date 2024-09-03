@@ -1,5 +1,6 @@
 package com.hotel.flint.user.employee.service;
 
+import com.hotel.flint.common.dto.FindEmailRequest;
 import com.hotel.flint.common.dto.UserLoginDto;
 import com.hotel.flint.common.enumdir.Department;
 import com.hotel.flint.common.enumdir.Option;
@@ -11,6 +12,9 @@ import com.hotel.flint.user.member.domain.Member;
 import com.hotel.flint.user.member.repository.MemberRepository;
 import com.hotel.flint.user.member.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,7 +31,6 @@ import javax.transaction.Transactional;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -139,8 +142,15 @@ public class EmployeeService {
         return employee;
     }
 
-    public String findEmailToPhoneNum(String phoneNumber){
-        Employee employee = employeeRepository.findByPhoneNumberAndDelYN(phoneNumber, Option.N).orElseThrow(
+//    public String findEmailToPhoneNum(String phoneNumber){
+//        Employee employee = employeeRepository.findByPhoneNumberAndDelYN(phoneNumber, Option.N).orElseThrow(
+//                ()-> new EntityNotFoundException("해당 번호로 가입한 계정이 없습니다. 관리자에게 문의해주세요."));
+//        return employee.getEmail();
+//    }
+
+    public String findEmailToPhoneNum(FindEmailRequest request){
+        Employee employee = employeeRepository.findByPhoneNumberAndFirstNameAndLastNameAndDelYN(
+                request.getPhoneNumber(), request.getFirstName(), request.getLastName(),Option.N).orElseThrow(
                 ()-> new EntityNotFoundException("해당 번호로 가입한 계정이 없습니다. 관리자에게 문의해주세요."));
         return employee.getEmail();
     }
@@ -225,7 +235,44 @@ public class EmployeeService {
 
         return info;
     }
-    public List<EmployeeDetResDto> getEmployeeList(EmployeeSearchDto dto) {
+
+//    public List<EmployeeDetResDto> getEmployeeList(EmployeeSearchDto dto) {
+//        Specification<Employee> specification = new Specification<Employee>() {
+//            @Override
+//            public Predicate toPredicate(Root<Employee> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+//                List<Predicate> predicates = new ArrayList<>();
+//
+//                // 이메일 검색 조건 추가
+//                if (dto.getEmail() != null && !dto.getEmail().isEmpty()) {
+//                    predicates.add(criteriaBuilder.like(root.get("email"), "%" + dto.getEmail() + "%"));
+//                }
+//
+//                // 직원 번호 검색 조건 추가
+//                if (dto.getEmployeeNumber() != null && !dto.getEmployeeNumber().isEmpty()) {
+//                    predicates.add(criteriaBuilder.equal(root.get("employeeNumber"), dto.getEmployeeNumber()));
+//                }
+//
+//                // 부서별 검색 조건 추가
+//                if (dto.getDepartment() != null) {
+//                    predicates.add(criteriaBuilder.equal(root.get("department"), dto.getDepartment()));
+//                }
+//
+//                return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+//            }
+//        };
+//
+//        List<Employee> employees = employeeRepository.findAll(specification);
+//        List<EmployeeDetResDto> dtos = new ArrayList<>();
+//
+//        for(Employee employee : employees) {
+//            dtos.add(employee.EmpDetEntity());
+//        }
+//
+//        return dtos;
+//    }
+
+    public Page<EmployeeDetResDto> getEmployeeList(EmployeeSearchDto dto, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         Specification<Employee> specification = new Specification<Employee>() {
             @Override
             public Predicate toPredicate(Root<Employee> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
@@ -250,12 +297,8 @@ public class EmployeeService {
             }
         };
 
-        List<Employee> employees = employeeRepository.findAll(specification);
-        List<EmployeeDetResDto> dtos = new ArrayList<>();
-
-        for(Employee employee : employees) {
-            dtos.add(employee.EmpDetEntity());
-        }
+        Page<Employee> employees = employeeRepository.findAll(specification, pageable);
+        Page<EmployeeDetResDto> dtos = employees.map(Employee::EmpDetEntity);
 
         return dtos;
     }

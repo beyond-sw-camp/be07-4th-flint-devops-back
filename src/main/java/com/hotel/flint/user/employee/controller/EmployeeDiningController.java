@@ -15,12 +15,14 @@ import com.hotel.flint.user.employee.dto.memberDiningResDto;
 import com.hotel.flint.user.employee.service.EmployeeDiningService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,12 +38,48 @@ public class EmployeeDiningController {
         this.diningReservationService = diningReservationService;
     }
 
+//    @GetMapping("/list")
+//    public ResponseEntity<?> menuList(
+//            @RequestParam("department") Department department,
+//            @RequestParam(value = "searchType", required = false) String searchType,
+//            @RequestParam(value = "searchValue", required = false) String searchValue) {
+////        본인 부서 메뉴 리스트 출력. 아래는 검색 기능 관련임.
+//        MenuSearchDto searchDto = new MenuSearchDto();
+//
+//        if ("menuName".equals(searchType)) {
+//            searchDto.setMenuName(searchValue);
+//        } else if ("menuId".equals(searchType) && searchValue != null) {
+//            try {
+//                searchDto.setId(Long.parseLong(searchValue));
+//            } catch (NumberFormatException e) {
+//                return new ResponseEntity<>(new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), "Invalid menuId format"), HttpStatus.BAD_REQUEST);
+//            }
+//        }
+//
+//        List<DiningMenuDto> dtos = employeeDiningService.getMenuList(department, searchDto);
+//        try {
+//            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회 성공", dtos);
+//            return new ResponseEntity<>(commonResDto, HttpStatus.OK);
+//        } catch (EntityNotFoundException e) {
+////            부서 찾기 결과가 없으면 400(현재 서비스의 경우 절대 안터짐) -> 아래 전부 동일함
+//            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+//            return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
+//        } catch (IllegalArgumentException e) {
+////            권한 없으면 403
+//            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.FORBIDDEN.value(), e.getMessage());
+//            return new ResponseEntity<>(commonErrorDto, HttpStatus.FORBIDDEN);
+//        }
+//    }
+
     @GetMapping("/list")
     public ResponseEntity<?> menuList(
             @RequestParam("department") Department department,
             @RequestParam(value = "searchType", required = false) String searchType,
-            @RequestParam(value = "searchValue", required = false) String searchValue) {
-//        본인 부서 메뉴 리스트 출력. 아래는 검색 기능 관련임.
+            @RequestParam(value = "searchValue", required = false) String searchValue,
+            @RequestParam(value = "page", defaultValue = "0") int page, // 기본값으로 0 페이지
+            @RequestParam(value = "size", defaultValue = "10") int size) { // 기본값으로 페이지 당 10개
+
+        // MenuSearchDto 객체 생성 및 검색 조건 설정
         MenuSearchDto searchDto = new MenuSearchDto();
 
         if ("menuName".equals(searchType)) {
@@ -54,21 +92,30 @@ public class EmployeeDiningController {
             }
         }
 
-        List<DiningMenuDto> dtos = employeeDiningService.getMenuList(department, searchDto);
+        // 서비스 메서드 호출 시 페이지와 사이즈 전달
         try {
-            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회 성공", dtos);
+            Page<DiningMenuDto> menuPage = employeeDiningService.getMenuList(department, searchDto, PageRequest.of(page, size));
+
+            // 페이징 정보를 포함한 결과를 Map으로 준비
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", menuPage.getContent());
+            response.put("totalPages", menuPage.getTotalPages());
+            response.put("totalElements", menuPage.getTotalElements());
+            response.put("currentPage", menuPage.getNumber());
+            response.put("pageSize", menuPage.getSize());
+
+            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회 성공", response);
             return new ResponseEntity<>(commonResDto, HttpStatus.OK);
         } catch (EntityNotFoundException e) {
-//            부서 찾기 결과가 없으면 400(현재 서비스의 경우 절대 안터짐) -> 아래 전부 동일함
+            // 부서 찾기 결과가 없으면 400
             CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
             return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
         } catch (IllegalArgumentException e) {
-//            권한 없으면 403
+            // 권한 없으면 403
             CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.FORBIDDEN.value(), e.getMessage());
             return new ResponseEntity<>(commonErrorDto, HttpStatus.FORBIDDEN);
         }
     }
-
 
     @PostMapping("/addmenu")
     public ResponseEntity<?> addMenu(@RequestBody MenuSaveDto menuSaveDto) {
