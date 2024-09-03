@@ -1,5 +1,6 @@
 package com.hotel.flint.user.member.service;
 
+import com.hotel.flint.common.dto.FindEmailRequest;
 import com.hotel.flint.common.dto.UserLoginDto;
 import com.hotel.flint.common.enumdir.Option;
 import com.hotel.flint.user.employee.repository.EmployeeRepository;
@@ -44,8 +45,15 @@ public class MemberService {
     }
 
 
-    public String findEmail(String phoneNumber) {
-        Member member = memberRepository.findByPhoneNumberAndDelYN(phoneNumber, Option.N).orElseThrow(
+//    public String findEmail(String phoneNumber) {
+//        Member member = memberRepository.findByPhoneNumberAndDelYN(phoneNumber, Option.N).orElseThrow(
+//                () -> new EntityNotFoundException("해당 번호로 가입한 아이디가 없습니다."));
+//        return member.getEmail();
+//    }
+
+    public String findEmail(FindEmailRequest request) {
+        Member member = memberRepository.findByPhoneNumberAndFirstNameAndLastNameAndDelYN(
+                request.getPhoneNumber(), request.getFirstName(), request.getLastName(), Option.N).orElseThrow(
                 () -> new EntityNotFoundException("해당 번호로 가입한 아이디가 없습니다."));
         return member.getEmail();
     }

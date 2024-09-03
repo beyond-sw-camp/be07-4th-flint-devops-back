@@ -1,5 +1,6 @@
 package com.hotel.flint.common.service;
 
+import com.hotel.flint.common.dto.FindPasswordRequest;
 import com.hotel.flint.common.enumdir.Option;
 import com.hotel.flint.user.employee.repository.EmployeeRepository;
 import com.hotel.flint.user.member.repository.MemberRepository;
@@ -51,19 +52,21 @@ public class MailService {
         }
     }
 
-    public void sendTempPassword(String email) {
-        if(!memberRepository.findByEmailAndDelYN(email, Option.N).isPresent()
-                && !employeeRepository.findByEmailAndDelYN(email, Option.N).isPresent()){
-            throw new EntityNotFoundException("해당 이메일은 존재하지 않습니다");
+    public void sendTempPassword(FindPasswordRequest request) {
+        if(!memberRepository.findByEmailAndFirstNameAndLastNameAndDelYN
+                (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N).isPresent()
+                && !employeeRepository.findByEmailAndFirstNameAndLastNameAndDelYN
+                (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N).isPresent()){
+                    throw new EntityNotFoundException("해당 정보로 가입한 아이디가 존재하지 않습니다.");
         }
         // 10자리 임시 비밀번호 생성
         String tempPassword = generateTempPassword(10);
 
         // 임시 비밀번호 이메일 발송
-        sendTempPasswordEmail(email, tempPassword);
+        sendTempPasswordEmail(request.getEmail(), tempPassword);
 
         // 데이터베이스에 인코딩된 임시 비밀번호 저장
-        userService.updatePassword(email, tempPassword);
+        userService.updatePassword(request, tempPassword);
     }
 
     private void sendTempPasswordEmail(String email, String tempPassword) {

@@ -25,6 +25,7 @@ import com.hotel.flint.user.member.repository.MemberRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -267,7 +269,7 @@ public class RoomReservedService {
     /**
      * 객실 예약 내역 조회 - 목록 (내 예약 목록)
      */
-    public Page<RoomReservedListDto> roomReservedList(Pageable pageable) {
+    public List<RoomReservedListDto> roomReservedList(Pageable pageable) {
 
         String memberEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -276,16 +278,30 @@ public class RoomReservedService {
                 () -> new IllegalArgumentException("해당 회원이 없음")
         );
 
-        Page<RoomReservation> reservations = roomReservationRepository.findByMember(pageable, member);
+        List<RoomReservedListDto> all = new ArrayList<>();
+        int pageNumber = 0;
+        boolean hashMorePage;
+        AtomicInteger start = new AtomicInteger((int) pageable.getOffset() + 1);
 
-        log.info("Total reservations found: {}", reservations.getTotalElements());
+        do {
+            pageable = PageRequest.of(pageNumber, 10);
+            Page<RoomReservation> reservations = roomReservationRepository.findByMember(pageable, member);
 
-        // no구하기
-        AtomicInteger start = new AtomicInteger((int) pageable.getOffset());
+            all.addAll(reservations.stream()
+                    .map(RoomReservation -> RoomReservation.listFromEntity(start.getAndIncrement()))
+                    .collect(Collectors.toList()));
+            hashMorePage = reservations.hasNext();
+            pageNumber++;
+        } while (hashMorePage);
 
-        Page<RoomReservedListDto> roomReservedListDtos = reservations.map(a -> a.listFromEntity(start.incrementAndGet()));
+//        log.info("Total reservations found: {}", reservations.getTotalElements());
+//
+//        // no구하기
+//        AtomicInteger start = new AtomicInteger((int) pageable.getOffset());
+//
+//        Page<RoomReservedListDto> roomReservedListDtos = reservations.map(a -> a.listFromEntity(start.incrementAndGet()));
 
-        return roomReservedListDtos;
+        return all;
     }
 
     /**

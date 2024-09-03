@@ -2,10 +2,7 @@ package com.hotel.flint.user.employee.controller;
 
 import com.hotel.flint.common.auth.JwtAuthFilter;
 import com.hotel.flint.common.auth.JwtTokenProvider;
-import com.hotel.flint.common.dto.CommonErrorDto;
-import com.hotel.flint.common.dto.CommonResDto;
-import com.hotel.flint.common.dto.FindPasswordRequest;
-import com.hotel.flint.common.dto.UserLoginDto;
+import com.hotel.flint.common.dto.*;
 import com.hotel.flint.common.enumdir.Department;
 import com.hotel.flint.common.service.MailService;
 import com.hotel.flint.user.employee.domain.Employee;
@@ -18,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -68,11 +64,24 @@ public class EmployeeController {
         }
     }
 
+//    @PostMapping("/findemail")
+////    직원 이메일 찾기. 회원과 동일한 로직임
+//    public ResponseEntity<?> findEmail(@RequestBody Map<String, String> request) {
+//        try {
+//            String Email = employeeService.findEmailToPhoneNum(request.get("phoneNumber"));
+//            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회에 성공하였습니다.",
+//                    "회원님의 이메일은 " + Email + "입니다");
+//            return new ResponseEntity<>(commonResDto, HttpStatus.OK);
+//        } catch (EntityNotFoundException e) {
+//            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+//            return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
+//        }
+//    }
     @PostMapping("/findemail")
-//    직원 이메일 찾기. 회원과 동일한 로직임
-    public ResponseEntity<?> findEmail(@RequestBody Map<String, String> request) {
+    //    직원 이메일 찾기. 회원과 동일한 로직임
+    public ResponseEntity<?> findEmail(@RequestBody FindEmailRequest request) {
         try {
-            String Email = employeeService.findEmailToPhoneNum(request.get("phoneNumber"));
+            String Email = employeeService.findEmailToPhoneNum(request);
             CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회에 성공하였습니다.",
                     "회원님의 이메일은 " + Email + "입니다");
             return new ResponseEntity<>(commonResDto, HttpStatus.OK);
@@ -86,7 +95,7 @@ public class EmployeeController {
 //    직원 비밀번호 찾기. 회원과 같은 로직
     public ResponseEntity<?> findPassword(@RequestBody FindPasswordRequest request) {
         try {
-            mailService.sendTempPassword(request.getEmail());
+            mailService.sendTempPassword(request);
             CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "임시 비밀번호를 이메일로 발송했습니다.", null);
             return new ResponseEntity<>(commonResDto, HttpStatus.OK);
         } catch (EntityNotFoundException e) {

@@ -74,7 +74,7 @@ public class RoomReservedController {
      * 객실 예약 내역 조회 - 목록
      */
     @GetMapping("/room/list")
-    public Page<RoomReservedListDto> reservationRoomListCheck(@PageableDefault(size=10, sort = "checkInDate"
+    public List<RoomReservedListDto> reservationRoomListCheck(@PageableDefault(size=10, sort = "checkInDate"
             , direction = Sort.Direction.ASC) Pageable pageable) {
 
         return roomReservedService.roomReservedList(pageable);
