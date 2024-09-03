@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class ReservationListResDto {
 
     private Long id;
+    private int no;
     private Long memberId;
     private DiningName diningName;
     private int adult;

@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Repository
 public interface DiningReservationRepository extends JpaRepository<DiningReservation, Long> {
-    List<DiningReservation> findByMemberId(Member member);
+    Page<DiningReservation> findByMemberId(Pageable pageable, Member member);
     Page<DiningReservation> findAll(Pageable pageable);
     Page<DiningReservation> findByMemberIdAndDiningId(Member memberId, Dining diningId, Pageable pageable);
     Page<DiningReservation> findAllByMemberId(Member member ,Pageable pageable);

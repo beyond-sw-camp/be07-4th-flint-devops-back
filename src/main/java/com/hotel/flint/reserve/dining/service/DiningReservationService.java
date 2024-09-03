@@ -1,5 +1,6 @@
 package com.hotel.flint.reserve.dining.service;
 
+import com.hotel.flint.common.configs.SecurityConfigs;
 import com.hotel.flint.common.enumdir.Department;
 import com.hotel.flint.common.enumdir.DiningName;
 import com.hotel.flint.common.enumdir.Option;
@@ -21,6 +22,7 @@ import com.hotel.flint.user.member.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,6 +34,7 @@ import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,15 +50,17 @@ public class DiningReservationService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeService employeeService;
     private final DiningSseController diningSseController;
+    private final SecurityConfigs securityConfigs;
 
     @Autowired
-    public DiningReservationService(DiningReservationRepository diningReservationRepository, MemberRepository memberRepository, DiningRepository diningRepository, EmployeeRepository employeeRepository, EmployeeService employeeService, DiningSseController diningSseController){
+    public DiningReservationService(DiningReservationRepository diningReservationRepository, MemberRepository memberRepository, DiningRepository diningRepository, EmployeeRepository employeeRepository, EmployeeService employeeService, DiningSseController diningSseController, SecurityConfigs securityConfigs){
         this.diningReservationRepository = diningReservationRepository;
         this.memberRepository = memberRepository;
         this.diningRepository = diningRepository; 
         this.employeeRepository = employeeRepository;
         this.employeeService = employeeService;
         this.diningSseController = diningSseController;
+        this.securityConfigs = securityConfigs;
     }
 
 
@@ -174,18 +179,30 @@ public class DiningReservationService {
     }
 
     // 회원별 전체 목록 조회 , 예를 들어 1번 회원이 예약한 목록 전체 조회
-    public List<ReservationListResDto> userList(){
+    public List<ReservationListResDto> userList(Pageable pageable){
+        String memberEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Member member = getAuthenticatedMember();
+        Member member = memberRepository.findByEmailAndDelYN(memberEmail, Option.N).orElseThrow(
+                ()-> new IllegalArgumentException("해당 회원이 없음")
+        );
+        List<ReservationListResDto> all = new ArrayList<>();
+        int pageNumber = 0;
+        boolean hasMorePage;
+        AtomicInteger start = new AtomicInteger((int) pageable.getOffset() + 1);
 
-        List<ReservationListResDto> reservationListResDtos = new ArrayList<>();
-        List<DiningReservation> diningReservationList = diningReservationRepository.findByMemberId(member);
+        do{
+            pageable = PageRequest.of(pageNumber, 10);
+            Page<DiningReservation> reservations = diningReservationRepository.findByMemberId(pageable, member);
 
-        for(DiningReservation reservation : diningReservationList ){
-            reservationListResDtos.add( reservation.fromListEntity() );
-        }
+            all.addAll(reservations.stream()
+                    .map(DiningReservation -> DiningReservation.fromListEntity(start.getAndIncrement()))
+                    .collect(Collectors.toList()));
+            hasMorePage = reservations.hasNext();
+            pageNumber++;
+        }while (hasMorePage);
 
-        return reservationListResDtos;
+
+        return all;
     }
 
     // 예약 취소
