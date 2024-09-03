@@ -3,7 +3,10 @@ package com.hotel.flint.support.qna.controller;
 import com.hotel.flint.common.dto.CommonErrorDto;
 import com.hotel.flint.common.dto.CommonResDto;
 import com.hotel.flint.support.qna.domain.QnA;
-import com.hotel.flint.support.qna.dto.*;
+import com.hotel.flint.support.qna.dto.CreateAnswerDto;
+import com.hotel.flint.support.qna.dto.EmployeeQnaDetailDto;
+import com.hotel.flint.support.qna.dto.EmployeeQnaListDto;
+import com.hotel.flint.support.qna.dto.UpdateAnswerDto;
 import com.hotel.flint.support.qna.service.EmployeeQnaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,6 +14,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/employee")
@@ -81,23 +87,30 @@ public class EmployeeQnaController {
 
     // QnA 리스트 목록 전체 조회
     @GetMapping("/qna/list")
-    public ResponseEntity<?> EmployeeQnaListPage (Pageable pageable) {
+    public ResponseEntity<?> EmployeeQnaListPage(
+            @RequestParam(value = "email", required = false) String email,
+            Pageable pageable) {
 
         try {
+            // 이메일 필터링 및 페이징 정보를 사용하여 서비스 호출
+            Page<EmployeeQnaListDto> employeeQnaListPage = qnaService.employeeQnaListPage(email, pageable);
 
-            Page<EmployeeQnaListDto> employeeQnaListPage = qnaService.employeeQnaListPage( pageable );
+            // 페이징 정보를 포함한 결과를 Map으로 준비
+            Map<String, Object> response = new HashMap<>();
+            response.put("content", employeeQnaListPage.getContent());
+            response.put("totalPages", employeeQnaListPage.getTotalPages());
+            response.put("totalElements", employeeQnaListPage.getTotalElements());
+            response.put("currentPage", employeeQnaListPage.getNumber());
+            response.put("pageSize", employeeQnaListPage.getSize());
 
-            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "전체 조회 성공",  employeeQnaListPage );
+            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "전체 조회 성공", response);
             return new ResponseEntity<>(commonResDto, HttpStatus.OK);
 
         } catch (IllegalArgumentException e) {
-
             CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
             return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
-
         }
     }
-
 
     // QnA 및 답변 상세 조회
     @GetMapping("/qna/detail/{qna_id}")
