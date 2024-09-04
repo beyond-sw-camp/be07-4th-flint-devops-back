@@ -14,7 +14,7 @@ COPY build.gradle .
 COPY settings.gradle .
 
 #  실행권한 없다고 에러 뜨는 경우 많음
-RUN chmod +x gradlew
+RUN chmod 777 gradlew
 RUN ./gradlew bootJar
 
 # 그냥 첫번째것만 하면 용량이 너무 크니까 두번째 스테이지에서는 jar 파일만 받는 것
