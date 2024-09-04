@@ -89,3 +89,13 @@ spec:
               secretKeyRef:
                 key: SMTP_PASSWORD
                 name: flint-app-secrets
+          - name: MQ_HOST
+            valueFrom:
+              secretKeyRef:
+                key: MQ_HOST
+                name: flint-app-secrets
+          - name: MQ_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: MQ_PASSWORD
+                name: flint-app-secrets

@@ -15,7 +15,7 @@ spring:
     show_sql: true
 
   redis:
-    host: localhost
+    host: ${REDIS_HOST}
     port: 6379
   mail:
     host: smtp.gmail.com
