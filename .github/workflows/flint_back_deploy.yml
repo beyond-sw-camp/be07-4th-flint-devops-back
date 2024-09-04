@@ -44,4 +44,4 @@ jobs:
       - name: eks kubectl apply
         run: |
           kubectl apply -f ./k8s/flint_depl.yml
-          kubectl rollout restart deployment flint-deployment -n mooo
+          kubectl rollout restart deployment flint-deployment -n flint
