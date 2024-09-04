@@ -33,11 +33,16 @@ spring:
           timeout: 5000
           writetimeout: 5000
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    ssl:
+      enabled: true
+    host: ${MQ_HOST}
+    port: 5671
+    username: jason
+    password: ${MQ_PASSWORD}
     virtual-host: /
+  listener:
+    simple:
+      acknowledge-mode: manual
 
 # 사원증 만들때 사용하기 위해 설정.
 fixed:
