@@ -79,3 +79,13 @@ spec:
                 key: AWS_SECRET_KEY
                 # 이름은 아까 만든 secrets 의 이름을 넣는다.
                 name: flint-app-secrets
+          - name: SMTP_NAME
+            valueFrom:
+              secretKeyRef:
+                key: SMTP_NAME
+                name: flint-app-secrets
+          - name: SMTP_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: SMTP_PASSWORD
+                name: flint-app-secrets
