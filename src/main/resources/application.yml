@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://${DB_HOST}:3306/ordersystem
+    url: jdbc:mariadb://${DB_HOST}:3306/flint_hotel
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     tomcat:
