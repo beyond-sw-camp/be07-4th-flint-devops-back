@@ -9,6 +9,7 @@ import com.hotel.flint.user.employee.domain.Employee;
 import com.hotel.flint.user.employee.dto.*;
 import com.hotel.flint.user.employee.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -182,20 +183,36 @@ public class EmployeeController {
         }
     }
 
-        @GetMapping("/list")
-        public ResponseEntity<?> employeeList (
-                @RequestParam(value = "searchType", required = false) String searchType,
-                @RequestParam(value = "searchValue", required = false) String searchValue){
-            EmployeeSearchDto dto = new EmployeeSearchDto();
+    @GetMapping("/list")
+    public ResponseEntity<?> employeeList(
+            @RequestParam(value = "searchType", required = false) String searchType,
+            @RequestParam(value = "searchValue", required = false) String searchValue,
+            @RequestParam(value = "page", defaultValue = "0") int page, // 기본값으로 0 페이지
+            @RequestParam(value = "size", defaultValue = "10") int size) { // 기본값으로 페이지 당 10개
 
-            if ("email".equals(searchType)) {
-                dto.setEmail(searchType);
-            } else if ("employeeNumber".equals(searchType) && searchValue != null) {
-                dto.setEmployeeNumber(searchValue);
-            } else if ("department".equals(searchType) && searchValue != null) {
-                dto.setDepartment(Department.valueOf(searchValue));
-            }
-            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회 성공", employeeService.getEmployeeList(dto));
-            return new ResponseEntity<>(commonResDto, HttpStatus.OK);
-            }
+        EmployeeSearchDto dto = new EmployeeSearchDto();
+
+        if ("email".equals(searchType) && searchValue != null) {
+            dto.setEmail(searchValue);
+        } else if ("employeeNumber".equals(searchType) && searchValue != null) {
+            dto.setEmployeeNumber(searchValue);
+        } else if ("department".equals(searchType) && searchValue != null) {
+            dto.setDepartment(Department.valueOf(searchValue));
+        }
+
+        // 서비스 메서드 호출 시 페이지와 사이즈 전달
+        Page<EmployeeDetResDto> employeePage = employeeService.getEmployeeList(dto, page, size);
+
+        // 페이징 정보를 포함한 결과를 Map으로 준비
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", employeePage.getContent());
+        response.put("totalPages", employeePage.getTotalPages());
+        response.put("totalElements", employeePage.getTotalElements());
+        response.put("currentPage", employeePage.getNumber());
+        response.put("pageSize", employeePage.getSize());
+
+        CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회 성공", response);
+        return new ResponseEntity<>(commonResDto, HttpStatus.OK);
+    }
+
 }

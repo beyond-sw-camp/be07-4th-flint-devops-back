@@ -12,6 +12,9 @@ import com.hotel.flint.user.member.domain.Member;
 import com.hotel.flint.user.member.repository.MemberRepository;
 import com.hotel.flint.user.member.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -232,7 +235,9 @@ public class EmployeeService {
 
         return info;
     }
-    public List<EmployeeDetResDto> getEmployeeList(EmployeeSearchDto dto) {
+
+    public Page<EmployeeDetResDto> getEmployeeList(EmployeeSearchDto dto, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         Specification<Employee> specification = new Specification<Employee>() {
             @Override
             public Predicate toPredicate(Root<Employee> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
@@ -257,24 +262,9 @@ public class EmployeeService {
             }
         };
 
-        List<Employee> employees = employeeRepository.findAll(specification);
-        List<EmployeeDetResDto> dtos = new ArrayList<>();
-
-        for(Employee employee : employees) {
-            dtos.add(employee.EmpDetEntity());
-        }
+        Page<Employee> employees = employeeRepository.findAll(specification, pageable);
+        Page<EmployeeDetResDto> dtos = employees.map(Employee::EmpDetEntity);
 
         return dtos;
-    }
-
-    /**
-     * 관리자 권한으로 회원 detail 정보 조회
-     */
-    public EmployeeToMemberDetailDto employeeToMemberDetail(Long id) {
-
-        Member member = memberRepository.findById(id).orElseThrow(
-                ()-> new EntityNotFoundException("존재하지 않는 회원입니다.")
-        );
-        return member.detailFromEntity();
     }
 }
