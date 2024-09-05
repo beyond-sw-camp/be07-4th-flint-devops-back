@@ -81,6 +81,7 @@ public class DiningReservationController {
             List<ReservationListResDto> reservationListResDtos = diningReservationService.userList(pageable);
             log.info(reservationListResDtos.toString());
             CommonResDto commonResDto = new CommonResDto(HttpStatus.OK,  reservationListResDtos.get(0).getMemberId() + "님 예약 조회", reservationListResDtos);
+            log.info("commonResDto" + commonResDto);
             return new ResponseEntity<>( commonResDto, HttpStatus.OK );
         }catch (IllegalArgumentException e) {
             CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
