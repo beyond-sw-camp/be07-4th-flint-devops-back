@@ -80,7 +80,7 @@ public class DiningReservationController {
         try {
             List<ReservationListResDto> reservationListResDtos = diningReservationService.userList(pageable);
             log.info("DiningReservationController[reservaitonLustResDtos] : " + reservationListResDtos.toString());
-            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK,  reservationListResDtos.get(0).getMemberId() + "님 예약 조회", reservationListResDtos);
+            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK,  "예약 조회", reservationListResDtos);
             log.info("DiningReservationController[commonResDto] : " + commonResDto);
             return new ResponseEntity<>( commonResDto, HttpStatus.OK );
         }catch (IllegalArgumentException e) {
