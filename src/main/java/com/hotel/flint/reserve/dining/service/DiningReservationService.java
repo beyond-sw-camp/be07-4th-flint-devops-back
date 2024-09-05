@@ -184,12 +184,12 @@ public class DiningReservationService {
     public List<ReservationListResDto> userList(Pageable pageable){
         log.info("userList");
         String memberEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-        log.info(memberEmail);
+        log.info("memberEmail : " + memberEmail);
         Member member = memberRepository.findByEmailAndDelYN(memberEmail, Option.N).orElseThrow(
                 ()-> new IllegalArgumentException("해당 회원이 없음")
         );
 
-        log.info(member.toString());
+        log.info("member : " +member.toString());
         List<ReservationListResDto> all = new ArrayList<>();
         int pageNumber = 0;
         boolean hasMorePage;
@@ -202,12 +202,12 @@ public class DiningReservationService {
             all.addAll(reservations.stream()
                     .map(DiningReservation -> DiningReservation.fromListEntity(start.getAndIncrement()))
                     .collect(Collectors.toList()));
-            log.info(all.toString());
+            log.info("all 보기 " + all.toString());
             hasMorePage = reservations.hasNext();
             pageNumber++;
         }while (hasMorePage);
 
-        System.out.println(all);
+        log.info("최종 all" + all.toString());
         return all;
     }
 
