@@ -99,6 +99,7 @@ public class EmployeeController {
     public ResponseEntity<?> findPassword(@RequestBody FindPasswordRequest request) {
         Optional<?> employee = mailService.sendTempPassword(request);
         if(!employee.isEmpty()){
+            System.out.println(employee);
             try {
                 CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "임시 비밀번호를 이메일로 발송했습니다.", null);
                 return new ResponseEntity<>(commonResDto, HttpStatus.OK);
