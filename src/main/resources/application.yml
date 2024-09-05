@@ -13,6 +13,7 @@ spring:
     hibernate:
       ddl-auto: update
     show_sql: true
+    open-in-view: false
 
   redis:
     host: ${REDIS_HOST}

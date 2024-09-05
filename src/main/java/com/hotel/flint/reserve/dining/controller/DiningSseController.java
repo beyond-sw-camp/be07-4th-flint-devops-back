@@ -64,6 +64,10 @@ public class DiningSseController implements MessageListener {
         emitters.put(email, emitter);
         emitter.onCompletion(()-> emitters.remove(email));
         emitter.onTimeout(() -> emitters.remove(email));
+        emitter.onError((e) -> {
+            emitters.remove(email);
+//            System.out.println("SSE 연결 오류: " + email);
+        });
         try{
             emitter.send(SseEmitter.event().name("connect").data("dining Reservation"));
         }catch (IOException e){
