@@ -36,7 +36,6 @@ public class RequestQueueProcessor {
                 String userEmail = email.toString();
                 sseController.publishMessage(userEmail);
             }
-            System.out.println("가져감");
             // 처리 완료된 후 큐에서 요청 제거
             queueManager.removeRequest(requestId);
         } catch (Exception e) {
