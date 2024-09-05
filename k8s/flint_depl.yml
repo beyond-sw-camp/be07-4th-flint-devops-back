@@ -101,7 +101,7 @@ spec:
                 name: flint-app-secrets
           readinessProbe:
             httpGet:
-              path: /flint/checking/healthcheck
+              path: employee/flint/checking/healthcheck
               port: 8080
             # 컨테이너 시작 후 지연시간 설정
             initialDelaySeconds: 50
