@@ -78,6 +78,7 @@ public class DiningReservationController {
         System.out.println("DiningReservationController[reservationDiningUserListCheck]");
         try {
             List<ReservationListResDto> reservationListResDtos = diningReservationService.userList(pageable);
+            System.out.println("DiningReservationController[reservationDiningUserListCheck]" + reservationListResDtos);
             CommonResDto commonResDto = new CommonResDto(HttpStatus.OK,  reservationListResDtos.get(0).getMemberId() + "님 예약 조회", reservationListResDtos);
             return new ResponseEntity<>( commonResDto, HttpStatus.OK );
         }catch (IllegalArgumentException e) {
