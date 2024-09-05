@@ -235,7 +235,6 @@ public class EmployeeService {
 
         return info;
     }
-
     public Page<EmployeeDetResDto> getEmployeeList(EmployeeSearchDto dto, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Specification<Employee> specification = new Specification<Employee>() {
@@ -266,5 +265,16 @@ public class EmployeeService {
         Page<EmployeeDetResDto> dtos = employees.map(Employee::EmpDetEntity);
 
         return dtos;
+    }
+
+    /**
+     * 관리자 권한으로 회원 detail 정보 조회
+     */
+    public EmployeeToMemberDetailDto employeeToMemberDetail(Long id) {
+
+        Member member = memberRepository.findById(id).orElseThrow(
+                ()-> new EntityNotFoundException("존재하지 않는 회원입니다.")
+        );
+        return member.detailFromEntity();
     }
 }
