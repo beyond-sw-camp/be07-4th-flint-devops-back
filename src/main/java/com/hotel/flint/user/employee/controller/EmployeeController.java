@@ -97,8 +97,8 @@ public class EmployeeController {
     @PostMapping("/findpassword")
 //    직원 비밀번호 찾기. 회원과 같은 로직
     public ResponseEntity<?> findPassword(@RequestBody FindPasswordRequest request) {
-        Optional<?> employee = mailService.sendTempPassword(request);
-        if(!employee.isEmpty()){
+        Class<?> employee = mailService.sendTempPassword(request);
+        if(!(employee==null)){
             System.out.println(employee);
             try {
                 CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "임시 비밀번호를 이메일로 발송했습니다.", null);

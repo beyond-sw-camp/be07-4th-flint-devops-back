@@ -55,7 +55,7 @@ public class MailService {
         }
     }
 
-    public Optional<?> sendTempPassword(FindPasswordRequest request) {
+    public Class<?> sendTempPassword(FindPasswordRequest request) {
         Optional<Member> member = memberRepository.findByEmailAndFirstNameAndLastNameAndDelYN
                 (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N);
         Optional<Employee> employee = employeeRepository.findByEmailAndFirstNameAndLastNameAndDelYN
@@ -76,7 +76,7 @@ public class MailService {
 
             // 데이터베이스에 인코딩된 임시 비밀번호 저장
             userService.updatePassword(request, tempPassword);
-            return member;
+            return member.getClass();
         } else if(member.isEmpty() && !employee.isEmpty()){
             // 10자리 임시 비밀번호 생성
             String tempPassword = generateTempPassword(10);
@@ -86,7 +86,7 @@ public class MailService {
 
             // 데이터베이스에 인코딩된 임시 비밀번호 저장
             userService.updatePassword(request, tempPassword);
-            return employee;
+            return employee.getClass();
         }else {
             throw new EntityNotFoundException("해당 정보로 가입한 아이디가 존재하지 않습니다.");
         }
