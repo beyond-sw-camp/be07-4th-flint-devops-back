@@ -23,7 +23,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     List<Employee> findAll(Specification<Employee> specification);
     Page<Employee> findAll(Specification<Employee> specification, Pageable pageable);
 
-    Page<Employee> findAll(Specification<Employee> specification, Pageable pageable);
     List<Employee> findByDepartment(Department department);
 }
 
