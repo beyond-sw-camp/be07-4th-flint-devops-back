@@ -2,6 +2,8 @@ package com.hotel.flint.common.service;
 
 import com.hotel.flint.common.controller.SSEController;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.AmqpAdmin;
+import org.springframework.amqp.core.QueueInformation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisCallback;
@@ -19,30 +21,36 @@ public class RequestQueueManager {
     private static final String QUEUE_KEY = "requestQueue"; // Redis List에 저장될 대기열
     private static final String POSITION_HASH_KEY = "requestQueuePosition"; // Redis Hash에 저장될 요청 ID별 위치 정보
     private static final String EMAIL_HASH_KEY = "RequestEmailMapping"; // Redis Hash에 저장될 요청 ID와 이메일 매핑 정보
+    private static final String MQ_QUEUE_NAME = "waitingListQueue"; // MQ 큐 이름
 
     @Autowired
     @Qualifier("3")
     private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
+    private AmqpAdmin amqpAdmin; // RabbitMQ Queue 정보 확인을 위해 AmqpAdmin 사용
+
+    @Autowired
     private SSEController sseController;
 
-    // Lua 스크립트를 사용하여 Redis에서 원자적(다른 명령어가 중간에 끼어들 수 없음)으로 데이터 추가 및 위치 계산을 수행
+    // Lua 스크립트 객체 생성. 스크립트와 반환 타입을 설정
     private static final String LUA_SCRIPT =
             "redis.call('RPUSH', KEYS[1], ARGV[1]); " + // 요청 ID를 List에 추가
                     "local position = redis.call('LLEN', KEYS[1]); " + // List의 길이를 계산(LLEN)하여 대기열 내 위치를 구함
                     "redis.call('HSET', KEYS[2], ARGV[1], tostring(position)); " +  // 계산된 위치를 Hash에 저장(HSET 명령어)
                     "return position;"; // 위치를 반환
 
-    // Lua 스크립트 객체 생성. 스크립트와 반환 타입을 설정
+    // Lua 스크립트
     private final DefaultRedisScript<Long> script = new DefaultRedisScript<>(LUA_SCRIPT, Long.class);
 
     // 요청을 큐에 추가하고 requestId와 email을 Redis에 저장
     public String addRequest(String email) {
+        // Redis와 MQ 크기 비교 및 초기화
+        initializeIfSizeMismatch();
+
         String requestId = UUID.randomUUID().toString(); // 고유한 요청 ID 생성
-        // Lua 스크립트를 실행하여 원자적으로 요청 ID를 추가하고 위치를 계산
         try {
-            // KEYS[1] = QUEUE_KEY, KEYS[2] = POSITION_HASH_KEY, ARGV[1] = requestId
+            // Lua 스크립트를 실행하여 원자적으로 요청 ID를 추가하고 위치를 계산
             Long position = redisTemplate.execute((RedisCallback<Long>) redisConnection ->
                     redisTemplate.execute(script, Arrays.asList(QUEUE_KEY, POSITION_HASH_KEY), requestId)
             );
@@ -50,15 +58,47 @@ public class RequestQueueManager {
             if (position != null) {
                 // requestId와 email을 Redis Hash에 저장
                 redisTemplate.opsForHash().put(EMAIL_HASH_KEY, requestId, email);
-//                log.info("REQUEST_ID {} 위치 {}로 저장됨", requestId, position);
                 return requestId; // 요청 ID 반환
             } else {
-//                log.error("요청 ID 생성 중 오류 발생");
                 throw new RuntimeException("요청 ID 생성 중 오류 발생");
             }
         } catch (Exception e) {
-//            log.error("대기열에 요청 추가 중 오류 발생: {}", e.getMessage(), e);
             throw new RuntimeException("대기열에 요청 추가 중 오류 발생: " + e.getMessage(), e);
+        }
+    }
+
+    // Redis와 MQ의 크기를 비교하고 다르면 초기화
+    private void initializeIfSizeMismatch() {
+        // Redis Queue 크기 가져오기
+        Long redisQueueSize = redisTemplate.opsForList().size(QUEUE_KEY);
+
+        // RabbitMQ Queue 크기 가져오기
+        QueueInformation queueInfo = amqpAdmin.getQueueInfo(MQ_QUEUE_NAME);
+        int mqQueueSize = queueInfo != null ? queueInfo.getMessageCount() : 0;
+
+        if (redisQueueSize != null && redisQueueSize != mqQueueSize) {
+            log.info("Redis Queue 크기와 MQ Queue 크기가 다릅니다. 초기화합니다.");
+            resetQueues(); // 초기화 메서드 호출
+        }
+    }
+
+    // Redis와 MQ를 초기화하는 메서드
+    private void resetQueues() {
+        try {
+            // Redis 대기열(List) 및 Hash 초기화
+            redisTemplate.delete(QUEUE_KEY);
+            redisTemplate.delete(POSITION_HASH_KEY);
+            redisTemplate.delete(EMAIL_HASH_KEY);
+
+            log.info("Redis 대기열 및 Hash 초기화 완료");
+
+            // MQ 큐 초기화
+            amqpAdmin.purgeQueue(MQ_QUEUE_NAME, true); // 큐 내 모든 메시지 삭제
+            log.info("MQ 큐 초기화 완료");
+
+        } catch (Exception e) {
+            log.error("큐 초기화 중 오류 발생: {}", e.getMessage(), e);
+            throw new RuntimeException("큐 초기화 중 오류 발생: " + e.getMessage(), e);
         }
     }
 
@@ -70,12 +110,9 @@ public class RequestQueueManager {
             if (positionStr != null) {
                 return Integer.parseInt(positionStr); // 위치를 정수로 변환하여 반환
             } else {
-//                log.error("POSITION_HASH_KEY에서 요청 ID 조회 실패: {}", requestId);
                 throw new RuntimeException("POSITION_HASH_KEY에서 요청 ID 조회 실패: " + requestId);
             }
         } catch (Exception e) {
-//            log.error("대기열 위치 조회 중 오류 발생: {}", e.getMessage(), e);
-            // 예외 발생 시 로그 출력 및 재던지기
             throw new RuntimeException("대기열 위치 조회 중 오류 발생: " + e.getMessage(), e);
         }
     }
@@ -107,12 +144,10 @@ public class RequestQueueManager {
 
                 // 트랜잭션 실행
                 connection.exec();
-//            log.info("REMOVE_REQUEST 트랜잭션 완료 - REQUEST_ID: {}", cleanedRequestId);
                 return null;
             });
 
         } catch (Exception e) {
-//        log.error("요청 ID 제거 중 오류 발생: {}", e.getMessage(), e);
             throw new RuntimeException("요청 ID 제거 중 오류 발생: " + e.getMessage(), e);
         }
     }
