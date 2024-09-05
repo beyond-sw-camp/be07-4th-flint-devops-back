@@ -2,7 +2,9 @@ package com.hotel.flint.common.service;
 
 import com.hotel.flint.common.dto.FindPasswordRequest;
 import com.hotel.flint.common.enumdir.Option;
+import com.hotel.flint.user.employee.domain.Employee;
 import com.hotel.flint.user.employee.repository.EmployeeRepository;
+import com.hotel.flint.user.member.domain.Member;
 import com.hotel.flint.user.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.persistence.EntityNotFoundException;
+import java.util.Optional;
 import java.util.Random;
 
 @Transactional
@@ -52,21 +55,41 @@ public class MailService {
         }
     }
 
-    public void sendTempPassword(FindPasswordRequest request) {
-        if(!memberRepository.findByEmailAndFirstNameAndLastNameAndDelYN
-                (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N).isPresent()
-                && !employeeRepository.findByEmailAndFirstNameAndLastNameAndDelYN
-                (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N).isPresent()){
-                    throw new EntityNotFoundException("해당 정보로 가입한 아이디가 존재하지 않습니다.");
+    public Optional<?> sendTempPassword(FindPasswordRequest request) {
+        Optional<Member> member = memberRepository.findByEmailAndFirstNameAndLastNameAndDelYN
+                (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N);
+        Optional<Employee> employee = employeeRepository.findByEmailAndFirstNameAndLastNameAndDelYN
+                (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N);
+//        if(!memberRepository.findByEmailAndFirstNameAndLastNameAndDelYN
+//                (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N).isPresent()
+//                && !employeeRepository.findByEmailAndFirstNameAndLastNameAndDelYN
+//                (request.getEmail(), request.getFirstName(), request.getLastName(), Option.N).isPresent()){
+//                    throw new EntityNotFoundException("해당 정보로 가입한 아이디가 존재하지 않습니다.");
+//        }
+
+        if(!member.isEmpty()){
+            // 10자리 임시 비밀번호 생성
+            String tempPassword = generateTempPassword(10);
+
+            // 임시 비밀번호 이메일 발송
+            sendTempPasswordEmail(request.getEmail(), tempPassword);
+
+            // 데이터베이스에 인코딩된 임시 비밀번호 저장
+            userService.updatePassword(request, tempPassword);
+            return member;
+        } else if(!employee.isEmpty()){
+            // 10자리 임시 비밀번호 생성
+            String tempPassword = generateTempPassword(10);
+
+            // 임시 비밀번호 이메일 발송
+            sendTempPasswordEmail(request.getEmail(), tempPassword);
+
+            // 데이터베이스에 인코딩된 임시 비밀번호 저장
+            userService.updatePassword(request, tempPassword);
+            return employee;
+        }else {
+            throw new EntityNotFoundException("해당 정보로 가입한 아이디가 존재하지 않습니다.");
         }
-        // 10자리 임시 비밀번호 생성
-        String tempPassword = generateTempPassword(10);
-
-        // 임시 비밀번호 이메일 발송
-        sendTempPasswordEmail(request.getEmail(), tempPassword);
-
-        // 데이터베이스에 인코딩된 임시 비밀번호 저장
-        userService.updatePassword(request, tempPassword);
     }
 
     private void sendTempPasswordEmail(String email, String tempPassword) {

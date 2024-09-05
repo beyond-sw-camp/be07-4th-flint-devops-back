@@ -12,11 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailSendException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/employee")
@@ -95,12 +97,20 @@ public class EmployeeController {
     @PostMapping("/findpassword")
 //    직원 비밀번호 찾기. 회원과 같은 로직
     public ResponseEntity<?> findPassword(@RequestBody FindPasswordRequest request) {
-        try {
-            mailService.sendTempPassword(request);
-            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "임시 비밀번호를 이메일로 발송했습니다.", null);
-            return new ResponseEntity<>(commonResDto, HttpStatus.OK);
-        } catch (EntityNotFoundException e) {
-            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+        Optional<?> employee = mailService.sendTempPassword(request);
+        if(!employee.isEmpty()){
+            try {
+                CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "임시 비밀번호를 이메일로 발송했습니다.", null);
+                return new ResponseEntity<>(commonResDto, HttpStatus.OK);
+            }catch (EntityNotFoundException e) {
+                CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+                return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
+            }catch (MailSendException e){
+                CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), "이메일 전송에 실패했습니다.");
+                return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
+            }
+        }else{
+            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), "해당 직원의 정보가 없습니다.");
             return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
         }
     }

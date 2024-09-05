@@ -19,6 +19,7 @@ import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/member")
@@ -104,16 +105,21 @@ public class MemberController {
     @PostMapping("/findpassword")
 //    회원 비밀번호 초기화. 자세한 내용 아래 sendTempPassword 참조
     public ResponseEntity<?> findPassword(@RequestBody FindPasswordRequest request) {
-
-        try {
-            mailService.sendTempPassword(request);
-            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "임시 비밀번호를 이메일로 발송했습니다.", null);
-            return new ResponseEntity<>(commonResDto, HttpStatus.OK);
-        } catch (EntityNotFoundException e){
-            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-            return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
-        } catch (MailSendException e){
-            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), "이메일 전송에 실패했습니다.");
+        Optional<?> member = mailService.sendTempPassword(request);
+        if(!member.isEmpty()){
+            try {
+                mailService.sendTempPassword(request);
+                CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "임시 비밀번호를 이메일로 발송했습니다.", null);
+                return new ResponseEntity<>(commonResDto, HttpStatus.OK);
+            } catch (EntityNotFoundException e){
+                CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+                return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
+            } catch (MailSendException e){
+                CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), "이메일 전송에 실패했습니다.");
+                return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
+            }
+        }else {
+            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), "해당 회원 정보가 존재하지 않습니다.");
             return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
         }
     }
