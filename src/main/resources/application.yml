@@ -1,0 +1,64 @@
+spring:
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://${DB_HOST}:3306/flint_hotel
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    tomcat:
+      max-active: 5
+  jpa:
+    database: mysql
+    database-platform: org.hibernate.dialect.MariaDBDialect
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    show_sql: true
+
+  redis:
+    host: ${REDIS_HOST}
+    port: 6379
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SMTP_NAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+  rabbitmq:
+    ssl:
+      enabled: true
+    host: ${MQ_HOST}
+    port: 5671
+    username: jason
+    password: ${MQ_PASSWORD}
+    virtual-host: /
+  listener:
+    simple:
+      acknowledge-mode: manual
+
+# 사원증 만들때 사용하기 위해 설정.
+fixed:
+  prefix: FL
+
+jwt:
+  expiration: 30
+  secretKey: ${JWT_SECRET} # my_token_secret
+
+# #aws s3 설정
+# cloud:
+#   aws:
+#     credentials:
+#       access-key: ${AWS_ACCESS_KEY} # 엑세스 키
+#       secret-key: ${AWS_SECRET_KEY} # 비밀 키
+#     region:
+#       static: ap-northeast-2
+#     s3:
+#       bucket: moori-file
