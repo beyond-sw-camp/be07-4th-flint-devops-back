@@ -231,4 +231,9 @@ public class EmployeeController {
         CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회 성공", response);
         return new ResponseEntity<>(commonResDto, HttpStatus.OK);
     }
+
+    @GetMapping("/flint/checking/healthcheck")
+    public String healthCheck(){
+        return "hi";
+    }
 }

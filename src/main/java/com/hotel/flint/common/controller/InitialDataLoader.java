@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -130,10 +129,5 @@ public class InitialDataLoader implements CommandLineRunner {
                     .build();
             employeeRepository.save(dto.toEntity(passwordEncoder.encode(dto.getPassword())));
         }
-    }
-
-    @GetMapping("/flint/checking/healthcheck")
-    public String healthCheck(){
-        return "hi";
     }
 }
