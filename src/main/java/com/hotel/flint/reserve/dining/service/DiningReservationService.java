@@ -180,6 +180,7 @@ public class DiningReservationService {
 
     // 회원별 전체 목록 조회 , 예를 들어 1번 회원이 예약한 목록 전체 조회
     public List<ReservationListResDto> userList(Pageable pageable){
+        System.out.println("DiningReservation[userList]");
         String memberEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Member member = memberRepository.findByEmailAndDelYN(memberEmail, Option.N).orElseThrow(
@@ -201,7 +202,7 @@ public class DiningReservationService {
             pageNumber++;
         }while (hasMorePage);
 
-
+        System.out.println(all);
         return all;
     }
 

@@ -75,6 +75,7 @@ public class DiningReservationController {
     @GetMapping("/dining/userList")
     public ResponseEntity<?> reservationDiningUserListCheck(@PageableDefault(size=10, sort = "reservationDateTime"
             , direction = Sort.Direction.ASC) Pageable pageable){
+        System.out.println("DiningReservationController[reservationDiningUserListCheck]");
         try {
             List<ReservationListResDto> reservationListResDtos = diningReservationService.userList(pageable);
             CommonResDto commonResDto = new CommonResDto(HttpStatus.OK,  reservationListResDtos.get(0).getMemberId() + "님 예약 조회", reservationListResDtos);
