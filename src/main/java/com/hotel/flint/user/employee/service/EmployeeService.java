@@ -235,6 +235,42 @@ public class EmployeeService {
 
         return info;
     }
+
+//    public List<EmployeeDetResDto> getEmployeeList(EmployeeSearchDto dto) {
+//        Specification<Employee> specification = new Specification<Employee>() {
+//            @Override
+//            public Predicate toPredicate(Root<Employee> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+//                List<Predicate> predicates = new ArrayList<>();
+//
+//                // 이메일 검색 조건 추가
+//                if (dto.getEmail() != null && !dto.getEmail().isEmpty()) {
+//                    predicates.add(criteriaBuilder.like(root.get("email"), "%" + dto.getEmail() + "%"));
+//                }
+//
+//                // 직원 번호 검색 조건 추가
+//                if (dto.getEmployeeNumber() != null && !dto.getEmployeeNumber().isEmpty()) {
+//                    predicates.add(criteriaBuilder.equal(root.get("employeeNumber"), dto.getEmployeeNumber()));
+//                }
+//
+//                // 부서별 검색 조건 추가
+//                if (dto.getDepartment() != null) {
+//                    predicates.add(criteriaBuilder.equal(root.get("department"), dto.getDepartment()));
+//                }
+//
+//                return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+//            }
+//        };
+//
+//        List<Employee> employees = employeeRepository.findAll(specification);
+//        List<EmployeeDetResDto> dtos = new ArrayList<>();
+//
+//        for(Employee employee : employees) {
+//            dtos.add(employee.EmpDetEntity());
+//        }
+//
+//        return dtos;
+//    }
+
     public Page<EmployeeDetResDto> getEmployeeList(EmployeeSearchDto dto, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Specification<Employee> specification = new Specification<Employee>() {

@@ -20,7 +20,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     Optional<Employee> findByPhoneNumberAndFirstNameAndLastNameAndDelYN(String phoneNumber, String FirstName, String LastName, Option delYN);
     Optional<Employee> findByEmailAndFirstNameAndLastNameAndDelYN(String email, String FirstName, String LastName, Option delYN);
 
-//    List<Employee> findAll(Specification<Employee> specification);
+    List<Employee> findAll(Specification<Employee> specification);
+    Page<Employee> findAll(Specification<Employee> specification, Pageable pageable);
 
     Page<Employee> findAll(Specification<Employee> specification, Pageable pageable);
     List<Employee> findByDepartment(Department department);

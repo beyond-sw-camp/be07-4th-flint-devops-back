@@ -14,7 +14,6 @@ import com.hotel.flint.reserve.dining.repository.DiningReservationRepository;
 import com.hotel.flint.user.employee.domain.Employee;
 import com.hotel.flint.user.employee.dto.DiningMenuDto;
 import com.hotel.flint.user.employee.dto.InfoDiningResDto;
-import com.hotel.flint.user.employee.dto.InfoUserResDto;
 import com.hotel.flint.user.employee.dto.MenuSearchDto;
 import com.hotel.flint.user.employee.repository.EmployeeRepository;
 import com.hotel.flint.user.member.domain.Member;
@@ -70,23 +69,66 @@ public class EmployeeDiningService {
         }
     }
 
-    public List<DiningMenuDto> getMenuList(Department department, MenuSearchDto dto){
+//    public List<DiningMenuDto> getMenuList(Department department, MenuSearchDto dto){
+//        department = getAuthenticatedEmployee().getDepartment();
+//        DiningName diningName = mapToDepartmentToDining(department);
+//        Dining dining = diningRepository.findByDiningName(diningName).orElseThrow(
+//                ()-> new EntityNotFoundException("해당 부서는 존재하지 않습니다"));
+//
+//        Specification<Menu> specification = new Specification<Menu>() {
+//            @Override
+//            public Predicate toPredicate(Root<Menu> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+//                List<Predicate> predicates = new ArrayList<>();
+//
+//                // 이름 검색 조건 추가
+//                if (dto.getMenuName() != null && !dto.getMenuName().isEmpty()) {
+//                    predicates.add(criteriaBuilder.like(root.get("menuName"), "%" + dto.getMenuName() + "%"));
+//                }
+//
+//                // id 검색 조건 추가 - 정확히 일치하는 값으로 검색
+//                if (dto.getId() != null) {
+//                    predicates.add(criteriaBuilder.equal(root.get("id"), dto.getId()));
+//                }
+//
+//                // 다이닝 필터링 조건 추가
+//                predicates.add(criteriaBuilder.equal(root.get("dining"), dining));
+//
+//                return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+//            }
+//        };
+//
+//        List<Menu> menus = menuRepository.findAll(specification);
+//
+//        List<DiningMenuDto> dtos = new ArrayList<>();
+//        for(Menu menu: menus){
+//            dtos.add(menu.fromEntity(menu));
+//        }
+//
+//        return dtos;
+//    }
+
+    public Page<DiningMenuDto> getMenuList(Department department, MenuSearchDto dto, Pageable pageable) {
+        // 인증된 직원의 부서를 가져옴
         department = getAuthenticatedEmployee().getDepartment();
         DiningName diningName = mapToDepartmentToDining(department);
-        Dining dining = diningRepository.findByDiningName(diningName).orElseThrow(
-                ()-> new EntityNotFoundException("해당 부서는 존재하지 않습니다"));
 
+        // 다이닝 이름으로 다이닝 엔티티를 찾음
+        Dining dining = diningRepository.findByDiningName(diningName).orElseThrow(
+                () -> new EntityNotFoundException("해당 부서는 존재하지 않습니다")
+        );
+
+        // 메뉴 필터링을 위한 Specification 정의
         Specification<Menu> specification = new Specification<Menu>() {
             @Override
             public Predicate toPredicate(Root<Menu> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
                 List<Predicate> predicates = new ArrayList<>();
 
-                // 이름 검색 조건 추가
+                // 메뉴 이름 검색 조건 추가
                 if (dto.getMenuName() != null && !dto.getMenuName().isEmpty()) {
                     predicates.add(criteriaBuilder.like(root.get("menuName"), "%" + dto.getMenuName() + "%"));
                 }
 
-                // id 검색 조건 추가 - 정확히 일치하는 값으로 검색
+                // ID 검색 조건 추가
                 if (dto.getId() != null) {
                     predicates.add(criteriaBuilder.equal(root.get("id"), dto.getId()));
                 }
@@ -98,16 +140,14 @@ public class EmployeeDiningService {
             }
         };
 
-        List<Menu> menus = menuRepository.findAll(specification);
+        // 페이징된 메뉴 리스트를 가져옴
+        Page<Menu> menuPage = menuRepository.findAll(specification, pageable);
 
-        List<DiningMenuDto> dtos = new ArrayList<>();
-        for(Menu menu: menus){
-            dtos.add(menu.fromEntity(menu));
-        }
+        // Menu 엔티티를 DiningMenuDto로 매핑
+        Page<DiningMenuDto> dtoPage = menuPage.map(menu -> menu.fromEntity(menu));
 
-        return dtos;
+        return dtoPage;
     }
-
 
     private DiningName mapToDepartmentToDining(Department department){
         switch (department){

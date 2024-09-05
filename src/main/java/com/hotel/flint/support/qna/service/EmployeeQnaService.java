@@ -14,8 +14,8 @@ import com.hotel.flint.user.member.domain.Member;
 import com.hotel.flint.user.member.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,8 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -112,16 +110,22 @@ public class EmployeeQnaService {
     }
 
     // QnA 리스트 목록 전체 조회
-    public Page<EmployeeQnaListDto> employeeQnaListPage(Pageable pageable){
+    public Page<EmployeeQnaListDto> employeeQnaListPage(String email, Pageable pageable) {
+        // Specification을 사용하여 이메일 필터링 추가
+        Specification<QnA> specification = (root, query, criteriaBuilder) -> {
+            if (email != null && !email.isEmpty()) {
+                // member 객체에서 email을 가져와서 필터링 조건 추가
+                return criteriaBuilder.like(
+                        root.join("member").get("email"), "%" + email + "%");
+            }
+            return null; // 조건이 없으면 모든 결과 반환
+        };
 
-        Page<QnA> qnaPageList = qnaRepository.findAll(pageable);
-        List<EmployeeQnaListDto> employeeQnaListDtos= qnaPageList
-                .stream()
-                .map(a -> a.ListEntity())
-                .collect(Collectors.toList());
-
-        return new PageImpl<>(employeeQnaListDtos, pageable, qnaPageList.getTotalElements());
+        // Specification과 페이징을 사용하여 쿼리 실행
+        Page<QnA> qnaPageList = qnaRepository.findAll(specification, pageable);
+        return qnaPageList.map(QnA::ListEntity); // QnA 엔티티를 DTO로 변환
     }
+
 
     // QnA 및 답변 상세 조회
     public EmployeeQnaDetailDto employeeDetailQnA(Long qnaId){

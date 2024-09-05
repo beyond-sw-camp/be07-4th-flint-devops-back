@@ -183,6 +183,23 @@ public class EmployeeController {
         }
     }
 
+//    @GetMapping("/list")
+//    public ResponseEntity<?> employeeList (
+//            @RequestParam(value = "searchType", required = false) String searchType,
+//            @RequestParam(value = "searchValue", required = false) String searchValue){
+//        EmployeeSearchDto dto = new EmployeeSearchDto();
+//
+//        if ("email".equals(searchType)) {
+//            dto.setEmail(searchType);
+//        } else if ("employeeNumber".equals(searchType) && searchValue != null) {
+//            dto.setEmployeeNumber(searchValue);
+//        } else if ("department".equals(searchType) && searchValue != null) {
+//            dto.setDepartment(Department.valueOf(searchValue));
+//        }
+//        CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회 성공", employeeService.getEmployeeList(dto));
+//        return new ResponseEntity<>(commonResDto, HttpStatus.OK);
+//        }
+
     @GetMapping("/list")
     public ResponseEntity<?> employeeList(
             @RequestParam(value = "searchType", required = false) String searchType,
@@ -214,5 +231,4 @@ public class EmployeeController {
         CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "조회 성공", response);
         return new ResponseEntity<>(commonResDto, HttpStatus.OK);
     }
-
 }
