@@ -19,6 +19,7 @@ import com.hotel.flint.user.employee.repository.EmployeeRepository;
 import com.hotel.flint.user.employee.service.EmployeeService;
 import com.hotel.flint.user.member.domain.Member;
 import com.hotel.flint.user.member.repository.MemberRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@Slf4j
 public class DiningReservationService {
 
     private final DiningReservationRepository diningReservationRepository;
@@ -180,11 +182,14 @@ public class DiningReservationService {
 
     // 회원별 전체 목록 조회 , 예를 들어 1번 회원이 예약한 목록 전체 조회
     public List<ReservationListResDto> userList(Pageable pageable){
+        log.info("userList");
         String memberEmail = SecurityContextHolder.getContext().getAuthentication().getName();
-
+        log.info("memberEmail : " + memberEmail);
         Member member = memberRepository.findByEmailAndDelYN(memberEmail, Option.N).orElseThrow(
                 ()-> new IllegalArgumentException("해당 회원이 없음")
         );
+
+        log.info("member : " +member.toString());
         List<ReservationListResDto> all = new ArrayList<>();
         int pageNumber = 0;
         boolean hasMorePage;
@@ -197,11 +202,12 @@ public class DiningReservationService {
             all.addAll(reservations.stream()
                     .map(DiningReservation -> DiningReservation.fromListEntity(start.getAndIncrement()))
                     .collect(Collectors.toList()));
+            log.info("all 보기 " + all.toString());
             hasMorePage = reservations.hasNext();
             pageNumber++;
         }while (hasMorePage);
 
-
+        log.info("최종 all" + all.toString());
         return all;
     }
 

@@ -5,6 +5,7 @@ import com.hotel.flint.common.dto.CommonResDto;
 import com.hotel.flint.reserve.dining.domain.DiningReservation;
 import com.hotel.flint.reserve.dining.dto.*;
 import com.hotel.flint.reserve.dining.service.DiningReservationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/reserve")
+@Slf4j
 public class DiningReservationController {
 
     private final DiningReservationService diningReservationService;
@@ -77,9 +79,14 @@ public class DiningReservationController {
             , direction = Sort.Direction.ASC) Pageable pageable){
         try {
             List<ReservationListResDto> reservationListResDtos = diningReservationService.userList(pageable);
-            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK,  reservationListResDtos.get(0).getMemberId() + "님 예약 조회", reservationListResDtos);
+            log.info("DiningReservationController[reservaitonLustResDtos] : " + reservationListResDtos.toString());
+            CommonResDto commonResDto = new CommonResDto(HttpStatus.OK,  "예약 조회", reservationListResDtos);
+            log.info("DiningReservationController[commonResDto] : " + commonResDto);
             return new ResponseEntity<>( commonResDto, HttpStatus.OK );
         }catch (IllegalArgumentException e) {
+            CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+            return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
+        } catch (IndexOutOfBoundsException e){
             CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
             return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
         }

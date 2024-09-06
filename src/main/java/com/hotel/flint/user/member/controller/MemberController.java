@@ -104,9 +104,8 @@ public class MemberController {
     @PostMapping("/findpassword")
 //    회원 비밀번호 초기화. 자세한 내용 아래 sendTempPassword 참조
     public ResponseEntity<?> findPassword(@RequestBody FindPasswordRequest request) {
-
         try {
-            mailService.sendTempPassword(request);
+            memberService.sendTempPassword(request);
             CommonResDto commonResDto = new CommonResDto(HttpStatus.OK, "임시 비밀번호를 이메일로 발송했습니다.", null);
             return new ResponseEntity<>(commonResDto, HttpStatus.OK);
         } catch (EntityNotFoundException e){
