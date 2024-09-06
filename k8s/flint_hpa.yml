@@ -1,0 +1,13 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: flint-hpa
+  namespace: flint
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: flint-deployment
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 30

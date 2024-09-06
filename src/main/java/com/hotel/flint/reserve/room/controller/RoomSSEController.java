@@ -74,7 +74,10 @@ public class RoomSSEController implements MessageListener {
 
         emitter.onCompletion(() -> emitters.remove(email));
         emitter.onTimeout(() -> emitters.remove(email));
-
+        emitter.onError((e) -> {
+            emitters.remove(email);
+//            System.out.println("SSE 연결 오류: " + email);
+        });
         try {
             emitter.send(SseEmitter.event().name("connect").data("연결되었습니다."));
         } catch (IOException e) {

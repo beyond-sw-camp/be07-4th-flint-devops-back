@@ -5,42 +5,38 @@ import com.hotel.flint.common.enumdir.Department;
 import com.hotel.flint.common.enumdir.Option;
 import com.hotel.flint.common.enumdir.RoomView;
 import com.hotel.flint.common.enumdir.Season;
-import com.hotel.flint.reserve.dining.domain.DiningReservation;
 import com.hotel.flint.reserve.room.controller.RoomSSEController;
-import com.hotel.flint.reserve.room.domain.*;
-import com.hotel.flint.reserve.room.dto.PossibleRoomDto;
-import com.hotel.flint.reserve.room.dto.RoomReservedDetailDto;
-import com.hotel.flint.reserve.room.dto.RoomReservedDto;
-import com.hotel.flint.reserve.room.dto.RoomReservedListDto;
-import com.hotel.flint.reserve.room.repository.*;
+import com.hotel.flint.reserve.room.domain.ReservedRoom;
+import com.hotel.flint.reserve.room.domain.RoomReservation;
+import com.hotel.flint.reserve.room.dto.*;
+import com.hotel.flint.reserve.room.repository.CheckReservedDateRepository;
+import com.hotel.flint.reserve.room.repository.RoomReservationRepository;
 import com.hotel.flint.room.domain.RoomDetails;
 import com.hotel.flint.room.domain.RoomInfo;
 import com.hotel.flint.room.domain.RoomPrice;
 import com.hotel.flint.room.repository.RoomDetailsRepository;
 import com.hotel.flint.room.repository.RoomInfoRepository;
 import com.hotel.flint.room.repository.RoomPriceRepository;
-import com.hotel.flint.user.employee.dto.InfoRoomDetResDto;
-import com.hotel.flint.user.employee.dto.memberDiningResDto;
 import com.hotel.flint.user.employee.domain.Employee;
+import com.hotel.flint.user.employee.dto.InfoRoomDetResDto;
 import com.hotel.flint.user.employee.repository.EmployeeRepository;
 import com.hotel.flint.user.member.domain.Member;
 import com.hotel.flint.user.member.repository.MemberRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.math.BigDecimal;
-import java.security.Security;
-import java.sql.Array;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -86,7 +82,7 @@ public class RoomReservedService {
      * 룸 예약 진행
      */
     @Transactional
-    public long roomReservation(RoomReservedDto dto) {
+    public RoomReservedResDto roomReservation(RoomReservedDto dto) {
 
         String memberEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -117,9 +113,9 @@ public class RoomReservedService {
         List<Employee> roomEmployeeList = employeeRepository.findByDepartment(Department.Room);
         roomSSEController.publishMessage(savedRoomReservation.detailFromEntity(), roomEmployeeList);
         // 날짜 가져가서 계산
-        long totalPrice = calculatePrice(dto);
+        RoomReservedResDto roomReservedResDto = new RoomReservedResDto(savedRoomReservation.getId(), calculatePrice(dto));
 
-        return totalPrice;
+        return roomReservedResDto;
 
     }
 
@@ -273,7 +269,7 @@ public class RoomReservedService {
     /**
      * 객실 예약 내역 조회 - 목록 (내 예약 목록)
      */
-    public Page<RoomReservedListDto> roomReservedList(Pageable pageable) {
+    public List<RoomReservedListDto> roomReservedList(Pageable pageable) {
 
         String memberEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -282,16 +278,30 @@ public class RoomReservedService {
                 () -> new IllegalArgumentException("해당 회원이 없음")
         );
 
-        Page<RoomReservation> reservations = roomReservationRepository.findByMember(pageable, member);
+        List<RoomReservedListDto> all = new ArrayList<>();
+        int pageNumber = 0;
+        boolean hashMorePage;
+        AtomicInteger start = new AtomicInteger((int) pageable.getOffset() + 1);
 
-        log.info("Total reservations found: {}", reservations.getTotalElements());
+        do {
+            pageable = PageRequest.of(pageNumber, 10);
+            Page<RoomReservation> reservations = roomReservationRepository.findByMember(pageable, member);
 
-        // no구하기
-        AtomicInteger start = new AtomicInteger((int) pageable.getOffset());
+            all.addAll(reservations.stream()
+                    .map(RoomReservation -> RoomReservation.listFromEntity(start.getAndIncrement()))
+                    .collect(Collectors.toList()));
+            hashMorePage = reservations.hasNext();
+            pageNumber++;
+        } while (hashMorePage);
 
-        Page<RoomReservedListDto> roomReservedListDtos = reservations.map(a -> a.listFromEntity(start.incrementAndGet()));
+//        log.info("Total reservations found: {}", reservations.getTotalElements());
+//
+//        // no구하기
+//        AtomicInteger start = new AtomicInteger((int) pageable.getOffset());
+//
+//        Page<RoomReservedListDto> roomReservedListDtos = reservations.map(a -> a.listFromEntity(start.incrementAndGet()));
 
-        return roomReservedListDtos;
+        return all;
     }
 
     /**

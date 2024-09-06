@@ -2,12 +2,7 @@ package com.hotel.flint.reserve.room.controller;
 
 import com.hotel.flint.common.dto.CommonErrorDto;
 import com.hotel.flint.common.dto.CommonResDto;
-import com.hotel.flint.common.enumdir.Option;
-import com.hotel.flint.reserve.room.domain.RoomReservation;
-import com.hotel.flint.reserve.room.dto.PossibleRoomDto;
-import com.hotel.flint.reserve.room.dto.RoomReservedDetailDto;
-import com.hotel.flint.reserve.room.dto.RoomReservedDto;
-import com.hotel.flint.reserve.room.dto.RoomReservedListDto;
+import com.hotel.flint.reserve.room.dto.*;
 import com.hotel.flint.reserve.room.service.RoomReservedService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,9 +37,9 @@ public class RoomReservedController {
     public ResponseEntity<?> roomReservation(@RequestBody RoomReservedDto dto) {
 
         try {
-            double totalPrice = roomReservedService.roomReservation(dto);
+            RoomReservedResDto resDto = roomReservedService.roomReservation(dto);
 
-            CommonResDto commonResDto = new CommonResDto(HttpStatus.CREATED, "예약 금액은 " + totalPrice + "원 입니다.", null);
+            CommonResDto commonResDto = new CommonResDto(HttpStatus.CREATED, "예약 금액은 " + resDto.getTotalPrice() + "원 입니다.", resDto);
             return new ResponseEntity<>(commonResDto, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
 
@@ -79,7 +74,7 @@ public class RoomReservedController {
      * 객실 예약 내역 조회 - 목록
      */
     @GetMapping("/room/list")
-    public Page<RoomReservedListDto> reservationRoomListCheck(@PageableDefault(size=10, sort = "checkInDate"
+    public List<RoomReservedListDto> reservationRoomListCheck(@PageableDefault(size=10, sort = "checkInDate"
             , direction = Sort.Direction.ASC) Pageable pageable) {
 
         return roomReservedService.roomReservedList(pageable);
@@ -100,7 +95,6 @@ public class RoomReservedController {
             CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
             return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
         }
-
     }
 
     /**

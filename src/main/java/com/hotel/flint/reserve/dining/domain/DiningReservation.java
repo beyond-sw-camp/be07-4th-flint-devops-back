@@ -58,6 +58,21 @@ public class DiningReservation extends BaseTimeEntity {
 
         return reservationListResDto;
     }
+    // 예약 전체 조회
+    public ReservationListResDto fromListEntity(int no){
+        ReservationListResDto reservationListResDto = ReservationListResDto.builder()
+                .id(this.id)
+                .no(no)
+                .memberId(this.memberId.getId())
+                .diningName(this.diningId.getDiningName())
+                .adult(this.adult)
+                .child(this.child)
+                .comment(this.comment)
+                .reservationDateTime(this.reservationDateTime)
+                .build();
+
+        return reservationListResDto;
+    }
 
     // 예약 삭제시 필요
     public DiningReservation(Member member, Long id){
