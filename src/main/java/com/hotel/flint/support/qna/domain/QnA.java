@@ -105,6 +105,7 @@ public class QnA {
                 .memberEmail(this.member.getEmail())
                 .writeTime(this.writeTime)
                 .service(this.service)
+                .option(this.respond)
                 .build();
     }
 
