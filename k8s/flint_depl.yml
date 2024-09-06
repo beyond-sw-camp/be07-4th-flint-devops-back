@@ -22,14 +22,14 @@ spec:
           # 기존에 80 -> 우린 이제 8080 포트를 사용할 것이므로 8080으로 변경
           - containerPort: 8080
           resources:
-          # 최대 할당 가능량
+            # 최대 할당 가능량
             limits:
+              cpu: "2"
+              memory: "1000Mi"
+            # 최소 할당량
+            requests:
               cpu: "1"
               memory: "500Mi"
-          # 최소 할당량
-            requests: 
-              cpu: "0.5"
-              memory: "250Mi"
           env:
           - name: REDIS_HOST
             valueFrom:
