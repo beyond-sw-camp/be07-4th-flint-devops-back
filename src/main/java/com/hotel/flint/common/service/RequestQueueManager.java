@@ -119,19 +119,11 @@ public class RequestQueueManager {
     // 요청 대기열 전체 제거
     public void removeAll() {
         try {
-            redisTemplate.execute((RedisCallback<Object>) connection -> {
-                connection.multi();
-
-                // Redis의 모든 큐와 이메일 매핑 정보 제거
-                connection.del(redisTemplate.getStringSerializer().serialize(QUEUE_KEY));
-                connection.del(redisTemplate.getStringSerializer().serialize(POSITION_HASH_KEY));
-                connection.del(redisTemplate.getStringSerializer().serialize(EMAIL_HASH_KEY));
-
-                connection.exec(); // 트랜잭션 커밋
-                return null;
-            });
+            redisTemplate.delete(QUEUE_KEY); // 대기열 리스트 삭제
+            redisTemplate.delete(POSITION_HASH_KEY); // 대기열 위치 정보 삭제
+            redisTemplate.delete(EMAIL_HASH_KEY); // 요청 ID와 이메일 매핑 정보 삭제
         } catch (Exception e) {
-            throw new RuntimeException("대기열 및 이메일 매핑 제거 중 오류 발생: " + e.getMessage(), e);
+            throw new RuntimeException("Redis 대기열 정보 삭제 중 오류 발생: " + e.getMessage(), e);
         }
     }
 
