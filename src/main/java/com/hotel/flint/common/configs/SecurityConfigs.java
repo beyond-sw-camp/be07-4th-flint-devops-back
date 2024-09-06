@@ -27,7 +27,7 @@ public class SecurityConfigs {
                 .authorizeRequests()
                     .antMatchers("/member/signup","/member/signup/verified",
                             "/*/findemail", "/", "/*/login", "/sendEmail",
-                            "/*/findpassword","/submit", "/subscribe", "/employee/memberlist",
+                            "/*/findpassword","/submit", "/subscribe",
                             "/employee/flint/checking/healthcheck")
                     .permitAll()
                 .anyRequest().authenticated()

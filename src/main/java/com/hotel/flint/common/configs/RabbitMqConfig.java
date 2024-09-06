@@ -55,11 +55,25 @@ public class RabbitMqConfig {
     /**
      * RabbitMQ 큐가 이미 존재하는지 확인하는 메서드
      */
-    private boolean isQueueExists(String queueName) {
+    public boolean isQueueExists(String queueName) {
         try {
             return rabbitAdmin(connectionFactory).getQueueProperties(queueName) != null;
         } catch (Exception e) {
             return false; // 큐가 없으면 false를 반환
+        }
+    }
+
+    /**
+     * 큐가 존재하지 않으면 새로 생성하는 메서드
+     */
+    public void createQueueIfNotExists(String queueName) {
+        if (!isQueueExists(queueName)) {
+            // 큐 생성
+            Queue queue = new Queue(queueName, true); // 큐가 영구적으로 저장되도록 설정
+            rabbitAdmin(connectionFactory).declareQueue(queue);
+
+            // Redis의 기존 대기열 데이터를 모두 삭제
+            requestQueueManager.removeAll();  // Redis 데이터 초기화
         }
     }
 
