@@ -1,5 +1,6 @@
 package com.hotel.flint.support.qna.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
@@ -21,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/inquiry")
+@Slf4j
 public class InquirySseController implements MessageListener {
     private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
     private final Set<String> subscribeList = ConcurrentHashMap.newKeySet();
@@ -42,7 +44,8 @@ public class InquirySseController implements MessageListener {
         emitters.put(email, emitter);
         emitter.onCompletion(() -> emitters.remove(email));
         emitter.onTimeout(() -> emitters.remove(email));
-
+        emitter.onError((e) ->
+                emitters.remove(email));
         try {
             emitter.send(SseEmitter.event().name("connect").data("connected!!"));
         } catch (IOException e) {
