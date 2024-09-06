@@ -46,6 +46,7 @@ public class InquirySseController implements MessageListener {
         emitter.onTimeout(() -> emitters.remove(email));
         emitter.onError((e) ->
                 emitters.remove(email));
+
         try {
             emitter.send(SseEmitter.event().name("connect").data("connected!!"));
         } catch (IOException e) {
