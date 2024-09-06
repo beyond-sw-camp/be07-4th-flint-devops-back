@@ -116,6 +116,24 @@ public class RequestQueueManager {
             throw new RuntimeException("요청 ID 제거 중 오류 발생: " + e.getMessage(), e);
         }
     }
+    // 요청 대기열 전체 제거
+    public void removeAll() {
+        try {
+            redisTemplate.execute((RedisCallback<Object>) connection -> {
+                connection.multi();
+
+                // Redis의 모든 큐와 이메일 매핑 정보 제거
+                connection.del(redisTemplate.getStringSerializer().serialize(QUEUE_KEY));
+                connection.del(redisTemplate.getStringSerializer().serialize(POSITION_HASH_KEY));
+                connection.del(redisTemplate.getStringSerializer().serialize(EMAIL_HASH_KEY));
+
+                connection.exec(); // 트랜잭션 커밋
+                return null;
+            });
+        } catch (Exception e) {
+            throw new RuntimeException("대기열 및 이메일 매핑 제거 중 오류 발생: " + e.getMessage(), e);
+        }
+    }
 
 //    // 대기열 업데이트 메서드 (2초마다 실행)
 //    @Scheduled(fixedRate = 2000)

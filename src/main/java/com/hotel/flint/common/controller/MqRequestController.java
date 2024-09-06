@@ -4,14 +4,20 @@ import com.hotel.flint.common.configs.RabbitMqConfig;
 import com.hotel.flint.common.dto.CommonErrorDto;
 import com.hotel.flint.common.dto.CommonResDto;
 import com.hotel.flint.common.service.RequestQueueManager;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 @RestController
 public class MqRequestController {
@@ -22,25 +28,51 @@ public class MqRequestController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    @Autowired
+    private RabbitAdmin rabbitAdmin;
+
+    @Autowired
+    @Qualifier("3")
+    private RedisTemplate<String, Object> redisTemplate;
+
+    private static final String EMAIL_HASH_KEY = "RequestEmailMapping";
+
     @PostMapping("/submit")
-    public ResponseEntity<?> submitRequest(@RequestParam String email) { // 이메일을 파라미터로 받음
+    public ResponseEntity<?> submitRequest(@RequestParam String email) {
         try {
-            // 새로운 요청 ID를 생성하고 Redis 큐에 추가
+            // 큐가 존재하는지 확인하고 필요시 재생성
+            if (!rabbitAdmin.getQueueProperties(RabbitMqConfig.WAITING_LIST_QUEUE).containsKey("QUEUE_NAME")) {
+                rabbitAdmin.declareQueue(new Queue(RabbitMqConfig.WAITING_LIST_QUEUE, true));
+            }
+
+            // 큐에 남아있는 메시지 수와 Redis 이메일 목록의 크기 확인
+            Properties queueProperties = rabbitAdmin.getQueueProperties(RabbitMqConfig.WAITING_LIST_QUEUE);
+            int messageCount = (int) queueProperties.getOrDefault("QUEUE_MESSAGE_COUNT", -1);
+            List<Object> emailList = redisTemplate.opsForHash().values(EMAIL_HASH_KEY);
+
+            // 메시지 수와 이메일 매핑 개수가 다를 경우 큐 및 Redis 대기열을 초기화
+            if (messageCount != emailList.size()) {
+                rabbitAdmin.deleteQueue(RabbitMqConfig.WAITING_LIST_QUEUE);
+                queueManager.removeAll(); // Redis 초기화
+                rabbitAdmin.declareQueue(new Queue(RabbitMqConfig.WAITING_LIST_QUEUE, true)); // 큐 재생성
+            }
+
+            // 새로운 요청 ID 생성 및 Redis에 추가
             String requestId = queueManager.addRequest(email);
 
             if (requestId == null) {
                 throw new IllegalStateException("요청 생성에 실패했습니다.");
             }
 
-            // RabbitMQ에 요청 ID를 전송
+            // RabbitMQ에 요청 ID 전송
             rabbitTemplate.convertAndSend(RabbitMqConfig.WAITING_LIST_QUEUE, requestId);
 
-            // 현재 요청의 대기열 위치를 가져옴
+            // 현재 요청의 대기열 위치를 Redis에서 확인
             int position = queueManager.getPositionInQueue(requestId);
 
-            // 대기열 위치가 유효하지 않으면 예외 발생
             if (position == -1) {
-                CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(), "대기열에서 요청 ID의 위치를 가져오는 데 실패했습니다.");
+                CommonErrorDto commonErrorDto = new CommonErrorDto(HttpStatus.BAD_REQUEST.value(),
+                        "대기열에서 요청 ID의 위치를 가져오는 데 실패했습니다.");
                 return new ResponseEntity<>(commonErrorDto, HttpStatus.BAD_REQUEST);
             }
 
