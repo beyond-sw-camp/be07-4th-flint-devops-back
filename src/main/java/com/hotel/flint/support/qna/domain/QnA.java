@@ -62,6 +62,7 @@ public class QnA {
                 .title(this.title)
                 .memberEmail(this.getMember().getEmail())
                 .writeTime(this.writeTime)
+                .option(this.respond)
                 .build();
         return qnaListDto;
     }
@@ -105,6 +106,7 @@ public class QnA {
                 .memberEmail(this.member.getEmail())
                 .writeTime(this.writeTime)
                 .service(this.service)
+                .option(this.respond)
                 .build();
     }
 

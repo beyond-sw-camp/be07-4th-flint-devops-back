@@ -1,5 +1,6 @@
 package com.hotel.flint.support.qna.dto;
 
+import com.hotel.flint.common.enumdir.Option;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,4 +19,5 @@ public class QnaListDto {
     private String title;
     private String memberEmail;
     private LocalDateTime writeTime;
+    private Option option;
 }

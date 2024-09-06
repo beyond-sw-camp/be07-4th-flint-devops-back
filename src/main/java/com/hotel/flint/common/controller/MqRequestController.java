@@ -22,9 +22,17 @@ public class MqRequestController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
+    @Autowired
+    private RabbitMqConfig rabbitMqConfig;
+
     @PostMapping("/submit")
-    public ResponseEntity<?> submitRequest(@RequestParam String email) { // 이메일을 파라미터로 받음
+    public ResponseEntity<?> submitRequest(@RequestParam String email) {
         try {
+            // 큐가 존재하는지 확인하고, 없으면 큐를 생성
+            if (!rabbitMqConfig.isQueueExists(RabbitMqConfig.WAITING_LIST_QUEUE)) {
+                rabbitMqConfig.createQueueIfNotExists(RabbitMqConfig.WAITING_LIST_QUEUE); // 큐가 없으면 생성
+            }
+
             // 새로운 요청 ID를 생성하고 Redis 큐에 추가
             String requestId = queueManager.addRequest(email);
 

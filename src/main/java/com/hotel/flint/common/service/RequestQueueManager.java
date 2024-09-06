@@ -116,6 +116,16 @@ public class RequestQueueManager {
             throw new RuntimeException("요청 ID 제거 중 오류 발생: " + e.getMessage(), e);
         }
     }
+    // 요청 대기열 전체 제거
+    public void removeAll() {
+        try {
+            redisTemplate.delete(QUEUE_KEY); // 대기열 리스트 삭제
+            redisTemplate.delete(POSITION_HASH_KEY); // 대기열 위치 정보 삭제
+            redisTemplate.delete(EMAIL_HASH_KEY); // 요청 ID와 이메일 매핑 정보 삭제
+        } catch (Exception e) {
+            throw new RuntimeException("Redis 대기열 정보 삭제 중 오류 발생: " + e.getMessage(), e);
+        }
+    }
 
 //    // 대기열 업데이트 메서드 (2초마다 실행)
 //    @Scheduled(fixedRate = 2000)
