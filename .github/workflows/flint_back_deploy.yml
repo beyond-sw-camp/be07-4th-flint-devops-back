@@ -2,7 +2,7 @@ name: deploy flint with k8s
 on:
   push:
     branches:
-      - Moori#11
+      - main
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
